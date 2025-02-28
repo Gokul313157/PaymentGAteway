@@ -1,30 +1,40 @@
-const express = require("express")
-const app = express()
-const cors = require("cors")
-const port = 3001
-const axios = require("axios")
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
-app.use(cors())
-app.use(express.json())
+const app = express();
+const PORT = 3001;
 
-app.post('/recharge', async(req,res)=>{
-   // const rechargeData = req.body
-    //try {
-      //  const response = await axios.post('http://localhost:3001/recharge',rechargeData)
-      //  res.send(response.data)
-    //} catch (error) {
-      //  console.error(error)
-        //res.status(500).send('payment failed !')
-   // }
-   try {
-    const rechargeData = req.body;
-    res.send("Recharge Successfull !")
-   } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal Server Error: ' + error.message)
-   }
-})
+app.use(cors());
+app.use(bodyParser.json());
 
-app.listen(port, () =>{
-    console.log('server listening on port ${port}');
-})
+app.post('/recharge', (req, res) => {
+    const { rechargeType,
+       mobileNumber,
+        operator,
+        circle,
+        rechargePlan,
+        paymentMethod,
+        cardNumber,
+        expirationDate,
+        cvv } = req.body;
+
+    if (rechargeType === 'mobile' && (!mobileNumber || !operator || !circle || !rechargePlan || !paymentMethod)) {
+        return res.status(400).json({ status: 'Failed', message: 'Missing required mobile recharge details' });
+    }
+    
+    if (rechargeType === 'dth' && (!operator || !rechargePlan || !paymentMethod)) {
+        return res.status(400).json({ status: 'Failed', message: 'Missing required DTH recharge details' });
+    }
+    
+    if (paymentMethod === 'Credit/Debit Card' && (!cardNumber || !expirationDate || !cvv)) {
+        return res.status(400).json({ status: 'Failed', message: 'Incomplete card details' });
+    }
+
+    console.log('Recharge request received:', req.body);
+    res.json({ status: 'Success', message: 'Recharge successful!' });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
